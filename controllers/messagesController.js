@@ -1,4 +1,4 @@
-const Messages = require("../Models/messagesModel");
+const Messages = require("../models/messagesModel");
  
  
 const callUser = (req, res) => {
