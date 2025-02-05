@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
+const { io } = require('../server'); 
+//const Notification = require("../models/notification")
 
 
 // Configure Nodemailer for email sending
@@ -161,13 +163,30 @@ module.exports.login = async (req, res) => {
       expiresIn: "1d",
     });
 
+// Notification creation
+// const notification = new Notification({
+//   user,  // Changed from email to userId
+//   message: "You have successfully logged in.",
+//   read: false,
+// });
+
+// await notification.save();
+
+// // **STEP 2: SEND REAL-TIME NOTIFICATION VIA SOCKET.IO**
+// const userSocketId = global.onlineUsers.get(userId); // Use userId to get socket ID
+// if (userSocketId) {
+//   io.to(userSocketId).emit("new-notification", notification);
+// }
+
+
+
+    // Respond with the user and token
     res.json({ user, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Server error." });
   }
 };
-
 module.exports.getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find({ _id: { $ne: req.params.id } }).select([
@@ -204,25 +223,24 @@ module.exports.getAllUsers = async (req, res, next) => {
 
 module.exports.searchUsers = async (req, res) => {
   const { query } = req.body;
-
+  console.log("Search Query:", query); // Log the query
   try {
     if (!query.trim()) {
       return res.status(400).json({ message: "Query is required" });
     }
-
     const users = await User.find({
       $or: [
         { username: query },  // Exact match for username
         { email: query }       // Exact match for email
       ]
     });
-
     res.json(users);
   } catch (error) {
     console.error("Error in search:", error.message);
     res.status(500).json({ message: "Failed to search users" });
   }
 };
+
 const logOut = (req, res, next) => {
   try {
     if (!req.params.id) return res.json({ msg: "User id is required " });

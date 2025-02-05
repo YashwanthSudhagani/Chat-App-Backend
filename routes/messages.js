@@ -1,11 +1,16 @@
-// messageRoutes.js
 const express = require("express");
+const { addMessage, getMessages,addCallMessage,getCallMessages } = require("../controllers/messagescontroller");
 const router = express.Router();
-const { addMessage,getMessages,handleChatRequest} = require("../controllers/messagesController");
-
-
+ 
+// Route to add a new message (including emojis)
 router.post("/addmsg", addMessage);
-router.get("/get",getMessages)
-router.post("/handleRequest",handleChatRequest)
-
+ 
+// Route to fetch messages between two users
+router.post("/getmsg", getMessages);
+ 
+router.post("/add-call", addCallMessage);
+router.post("/get-calls", getCallMessages);
+ 
+ 
 module.exports = router;
+ 
