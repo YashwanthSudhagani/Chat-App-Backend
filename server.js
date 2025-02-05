@@ -13,7 +13,7 @@ const server = http.createServer(app);
 // CORS configuration to allow frontend (localhost:3000)
 app.use(
   cors({
-    origin: "https://vercel.com/yashwanths-projects-ccb0cf34/chat-app", // Frontend URL (make sure this matches)
+    origin: "https://vercel.com/yashwanths-projects-ccb0cf34", // Frontend URL (make sure this matches)
     methods: ["GET", "POST"],
     credentials: true, // Allow cookies to be sent
   })
@@ -51,7 +51,7 @@ server.listen(process.env.PORT, () => {
 // Initialize Socket.IO
 const io = socket(server, {
   cors: {
-    origin: "https://vercel.com/yashwanths-projects-ccb0cf34/chat-app", // Frontend origin
+    origin: "https://vercel.com/yashwanths-projects-ccb0cf34s", // Frontend origin
     methods: ["GET", "POST"],
     credentials: true,
   },
