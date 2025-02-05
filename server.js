@@ -18,6 +18,15 @@ app.use(
     credentials: true, // Allow cookies to be sent
   })
 );
+
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; img-src 'self' https://chat-app-backend-2ph1.onrender.com data:;"
+  );
+  next();
+});
+
  
 app.use(express.json());
 app.use(express.static('public'));
