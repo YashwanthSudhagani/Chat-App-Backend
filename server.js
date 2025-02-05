@@ -13,7 +13,7 @@ const server = http.createServer(app);
 // CORS configuration to allow frontend (localhost:3000)
 app.use(
   cors({
-    origin: "chat-app-front-end-ten.vercel.app", // Frontend URL (make sure this matches)
+    origin: "https://vercel.com/yashwanths-projects-ccb0cf34/chat-app", // Frontend URL (make sure this matches)
     methods: ["GET", "POST"],
     credentials: true, // Allow cookies to be sent
   })
@@ -27,11 +27,9 @@ app.use((req, res, next) => {
   next();
 });
 
-
  
 app.use(express.json());
 app.use(express.static('public'));
-
 
  
 // Connect to MongoDB
@@ -53,7 +51,7 @@ server.listen(process.env.PORT, () => {
 // Initialize Socket.IO
 const io = socket(server, {
   cors: {
-    origin: "chat-app-front-end-ten.vercel.app", // Frontend origin
+    origin: "https://vercel.com/yashwanths-projects-ccb0cf34/chat-app", // Frontend origin
     methods: ["GET", "POST"],
     credentials: true,
   },
