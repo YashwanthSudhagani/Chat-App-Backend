@@ -21,11 +21,12 @@ app.use(
 
 app.use((req, res, next) => {
   res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self'; img-src 'self' https://chat-app-backend-2ph1.onrender.com data:;"
+      "Content-Security-Policy",
+      "default-src 'self'; connect-src 'self' wss://chat-app-backend-2ph1.onrender.com https://chat-app-backend-2ph1.onrender.com;"
   );
   next();
 });
+
 
  
 app.use(express.json());
