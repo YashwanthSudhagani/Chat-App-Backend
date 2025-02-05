@@ -10,15 +10,25 @@ const http = require("http");
 const app = express();
 const server = http.createServer(app);
  
-// CORS configuration to allow frontend (localhost:3000)
+// ✅ Allow the correct frontend domain
+const allowedOrigins = [
+  "https://chat-app-delta-lemon.vercel.app", // Your Vercel frontend
+  "http://localhost:3000", // Allow local development
+];
+
+// CORS Middleware
 app.use(
   cors({
-    origin: "https://vercel.com/yashwanths-projects-ccb0cf34", // Frontend URL (make sure this matches)
-    methods: ["GET", "POST"],
-    credentials: true, // Allow cookies to be sent
+      origin: function (origin, callback) {
+          if (!origin || allowedOrigins.includes(origin)) {
+              callback(null, true);
+          } else {
+              callback(new Error("Not allowed by CORS"));
+          }
+      },
+      credentials: true, // Allow cookies/auth tokens if needed
   })
 );
-
 app.use((req, res, next) => {
   res.setHeader(
       "Content-Security-Policy",
@@ -48,14 +58,15 @@ server.listen(process.env.PORT, () => {
   console.log(`Server started on port ${process.env.PORT}`);
 });
  
-// Initialize Socket.IO
+// ✅ Socket.io Configuration with Correct CORS
 const io = socket(server, {
   cors: {
-    origin: "https://vercel.com/yashwanths-projects-ccb0cf34s", // Frontend origin
-    methods: ["GET", "POST"],
-    credentials: true,
+      origin: allowedOrigins,
+      methods: ["GET", "POST"],
+      credentials: true,
   },
 });
+
  
 // Store active users (you can replace this with a more persistent solution like a database)
 let users = {};
