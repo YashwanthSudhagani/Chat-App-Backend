@@ -7,6 +7,31 @@ const callUser = (req, res) => {
   req.io.to(to).emit("incoming-call", { from, type });
   res.status(200).json({ success: true, message: "Call initiated" });
 };
+
+module.exports.addMessage = async (req, res) => {
+  try {
+    const { from, to, message } = req.body;
+
+    if (!message || message.trim() === "") {
+      return res.status(400).json({ msg: "Message cannot be empty" });
+    }
+
+    // Store the message in the database asynchronously
+    const data = await Messages.create({
+      message: { text: message },
+      users: [from, to],
+      sender: from,
+    });
+
+    console.log("Message stored:", data);
+    return res.json({ msg: "Message added successfully." });
+
+  } catch (error) {
+    console.error("Error adding message:", error);
+    res.status(500).json({ msg: "Internal Server Error" });
+  }
+};
+
  
 module.exports.getMessages = async (req, res) => {
   try {
@@ -30,38 +55,38 @@ module.exports.getMessages = async (req, res) => {
   }
 };
  
-module.exports.addMessage = async (req, res) => {
-  try {
-    const { from, to, message } = req.body;
+// module.exports.addMessage = async (req, res) => {
+//   try {
+//     const { from, to, message } = req.body;
  
-    // Log the incoming message to ensure it's being received correctly
-    console.log("Received message:", message); // Ensure emojis are included here
+//     // Log the incoming message to ensure it's being received correctly
+//     console.log("Received message:", message); // Ensure emojis are included here
  
-    // Validate the message
-    if (!message || message.trim() === "") {
-      return res.status(400).json({ msg: "Message cannot be empty" });
-    }
+//     // Validate the message
+//     if (!message || message.trim() === "") {
+//       return res.status(400).json({ msg: "Message cannot be empty" });
+//     }
  
-    // Save the message in the database
-    const data = await Messages.create({
-      message: { text: message }, // Store the message text (including emojis)
-      users: [from, to], // The two users involved in the conversation
-      sender: from, // The sender of the message
-    });
+//     // Save the message in the database
+//     const data = await Messages.create({
+//       message: { text: message }, // Store the message text (including emojis)
+//       users: [from, to], // The two users involved in the conversation
+//       sender: from, // The sender of the message
+//     });
  
-    // Log the result to verify it's stored correctly
-    console.log("Message stored:", data);
+//     // Log the result to verify it's stored correctly
+//     console.log("Message stored:", data);
  
-    if (data) {
-      return res.json({ msg: "Message added successfully." });
-    } else {
-      return res.status(500).json({ msg: "Failed to add message to the database" });
-    }
-  } catch (error) {
-    console.error("Error adding message:", error);
-    res.status(500).json({ msg: "Internal Server Error" });
-  }
-};
+//     if (data) {
+//       return res.json({ msg: "Message added successfully." });
+//     } else {
+//       return res.status(500).json({ msg: "Failed to add message to the database" });
+//     }
+//   } catch (error) {
+//     console.error("Error adding message:", error);
+//     res.status(500).json({ msg: "Internal Server Error" });
+//   }
+// };
  
 // Store a call log message
 module.exports.addCallMessage = async (req, res) => {
