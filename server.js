@@ -41,16 +41,14 @@ app.use(
 //   next();
 // });
 
-const frontendDomain = process.env.CLIENT_URL || "http://localhost:3000";
 
 app.use((req, res, next) => {
   res.setHeader(
-    "Content-Security-Policy",
-    `default-src 'self'; connect-src 'self' wss://${frontendDomain} https://${frontendDomain};`
+      "Content-Security-Policy",
+      "default-src 'self'; connect-src 'self' wss://chat-app-backend-2ph1.onrender.com https://chat-app-backend-2ph1.onrender.com;"
   );
   next();
 });
-
  
  
 app.use(express.json());
