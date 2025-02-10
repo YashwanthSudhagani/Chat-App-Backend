@@ -29,7 +29,7 @@ transporter.verify((error) => {
 
 // Helper function to send a verification email
 const sendVerificationEmail = async (email, token) => {
-  const verificationLink = `${process.env.CLIENT_URL}/verify-email/${token}`;
+  const verificationLink = `"https://chat-app-delta-lemon.vercel.app/verify-email/${token}`;
   const mailOptions = {
     from: process.env.SMTP_USER,
     to: email,
