@@ -171,7 +171,12 @@ module.exports.login = async (req, res) => {
       });
   
       await notification.save();
-  
+       
+      if (!global.onlineUsers) {
+        console.error("global.onlineUsers is not initialized.");
+        global.onlineUsers = new Map(); // Ensure it's initialized
+      }
+      
       // **STEP 2: SEND REAL-TIME NOTIFICATION VIA SOCKET.IO**
       const userSocketId = global.onlineUsers.get(user.email);
       if (userSocketId) {
