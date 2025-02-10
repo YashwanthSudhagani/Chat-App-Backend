@@ -57,14 +57,8 @@ app.use(express.static('public'));
 // ✅ Initialize Socket.io
 const io = socket(server, {
   cors: {
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"], // ✅ Allow PUT & DELETE
     credentials: true,
   },
 });
