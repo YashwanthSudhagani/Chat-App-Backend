@@ -14,9 +14,9 @@ const server = http.createServer(app);
  
 // ✅ Allow the correct frontend domain
 const allowedOrigins = [
-  "https://chat-app-delta-lemon.vercel.app", // Your Vercel frontend
-  "http://localhost:3000", // Allow local development
+  process.env.CLIENT_URL || "http://localhost:3000", // Default to localhost
 ];
+
 
 // ✅ CORS Middleware (Allow PUT & DELETE)
 app.use(
@@ -41,14 +41,16 @@ app.use(
 //   next();
 // });
 
+const frontendDomain = process.env.CLIENT_URL || "http://localhost:3000";
 
 app.use((req, res, next) => {
   res.setHeader(
-      "Content-Security-Policy",
-      "default-src 'self'; connect-src 'self' wss://chat-app-backend-2ph1.onrender.com https://chat-app-backend-2ph1.onrender.com;"
+    "Content-Security-Policy",
+    `default-src 'self'; connect-src 'self' wss://${frontendDomain} https://${frontendDomain};`
   );
   next();
 });
+
  
  
 app.use(express.json());
@@ -57,8 +59,14 @@ app.use(express.static('public'));
 // ✅ Initialize Socket.io
 const io = socket(server, {
   cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE"], // ✅ Allow PUT & DELETE
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
 });
