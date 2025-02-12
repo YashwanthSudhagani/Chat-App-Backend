@@ -1,4 +1,5 @@
 const Messages = require("../models/messagesModel");
+const mongoose = require("mongoose");
  
  
 const callUser = (req, res) => {
@@ -151,5 +152,78 @@ exports.getCall = async (req, res) => {
     res.json(calls);
   } catch (error) {
     res.status(500).json({ error: "Error fetching call logs" });
+  }
+};
+
+// // Edit a Message
+// module.exports.editMessage = async (req, res) => {
+//   try {
+//     const { text } = req.body;
+//     const updatedMessage = await Messages.findByIdAndUpdate(
+//       req.params.messageId,
+//       { "message.text": text },
+//       { new: true }
+//     );
+//     if (!updatedMessage) return res.status(404).json({ error: "Message not found" });
+
+//     res.json(updatedMessage);
+//   } catch (err) {
+//     res.status(500).json({ error: "Failed to update message" });
+//   }
+// };
+
+module.exports.updateMessage = async (req, res) => {
+  try {
+    let messageId = req.params.messageId.trim(); // ✅ Trim to remove spaces/newlines
+    const { text } = req.body;
+
+    // ✅ Ensure messageId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({ error: "Invalid message ID format" });
+    }
+
+    // ✅ Find the existing message first
+    const existingMessage = await Messages.findById(messageId);
+    if (!existingMessage) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    console.log("Updating message:", messageId, "with text:", text); // Debugging log
+
+    // ✅ Update only the `text` field inside `message` object
+    const updatedMessage = await Messages.findByIdAndUpdate(
+      messageId,
+      { $set: { "message.text": text } }, // ✅ Properly update nested field
+      { new: true, runValidators: true }
+    );
+
+    res.json(updatedMessage);
+  } catch (err) {
+    console.error("Error updating message:", err); // Log the error
+    res.status(500).json({ error: "Failed to update message", details: err.message });
+  }
+};
+
+// Delete a Message
+module.exports.deleteMessage = async (req, res) => {
+  try {
+    let messageId = req.params.messageId.trim(); // ✅ Trim messageId
+
+    // ✅ Check if messageId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({ error: "Invalid message ID format" });
+    }
+
+    // ✅ Delete the message
+    const deletedMessage = await Messages.findByIdAndDelete(messageId);
+
+    if (!deletedMessage) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    res.json({ message: "Message deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting message:", err); // ✅ Log error for debugging
+    res.status(500).json({ error: "Failed to delete message", details: err.message });
   }
 };
