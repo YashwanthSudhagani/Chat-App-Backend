@@ -76,7 +76,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/notification",notificationRoutes(io))
 
  
-const PORT = process.env.PORT || 5000; // Use Render's assigned port or default to 5000
+const PORT = "https://chat-app-backend-2ph1.onrender.com" || 5000; // Use Render's assigned port or default to 5000
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
