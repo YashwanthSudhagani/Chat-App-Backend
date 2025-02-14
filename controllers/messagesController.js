@@ -8,48 +8,47 @@ const callUser = (req, res) => {
   req.io.to(to).emit("incoming-call", { from, type });
   res.status(200).json({ success: true, message: "Call initiated" });
 };
-
+ 
 module.exports.addMessage = async (req, res) => {
   try {
     const { from, to, message } = req.body;
-
+ 
     if (!message || message.trim() === "") {
       return res.status(400).json({ msg: "Message cannot be empty" });
     }
-
+ 
     // Store the message in the database asynchronously
     const data = await Messages.create({
       message: { text: message },
       users: [from, to],
       sender: from,
     });
-
+ 
     console.log("Message stored:", data);
     return res.json({ msg: "Message added successfully." });
-
+ 
   } catch (error) {
     console.error("Error adding message:", error);
     res.status(500).json({ msg: "Internal Server Error" });
   }
 };
-
+ 
  
 module.exports.getMessages = async (req, res) => {
   try {
     const { from, to } = req.body;
  
-    // Fetch all messages between 'from' and 'to', sorted by the timestamp
     const messages = await Messages.find({
-      users: { $all: [from, to] }, // Ensures messages are between both users
+      users: { $all: [from, to] },
     }).sort({ updatedAt: 1 });
  
-    // Format the messages for the frontend (determine if the message is from the sender or not)
     const formattedMessages = messages.map((msg) => ({
-      fromSelf: msg.sender.toString() === from, // Check if the message is from the current user
-      message: msg.message.text, // The actual message text (including emojis)
+      _id: msg._id, // Include the message ID
+      fromSelf: msg.sender.toString() === from,
+      message: msg.message.text,
     }));
  
-    res.json(formattedMessages); // Return the formatted messages to the client
+    res.json(formattedMessages);
   } catch (error) {
     console.error("Error fetching messages:", error);
     res.status(500).json({ msg: "Internal Server Error" });
@@ -154,7 +153,7 @@ exports.getCall = async (req, res) => {
     res.status(500).json({ error: "Error fetching call logs" });
   }
 };
-
+ 
 // // Edit a Message
 // module.exports.editMessage = async (req, res) => {
 //   try {
@@ -165,62 +164,62 @@ exports.getCall = async (req, res) => {
 //       { new: true }
 //     );
 //     if (!updatedMessage) return res.status(404).json({ error: "Message not found" });
-
+ 
 //     res.json(updatedMessage);
 //   } catch (err) {
 //     res.status(500).json({ error: "Failed to update message" });
 //   }
 // };
-
+ 
 module.exports.updateMessage = async (req, res) => {
   try {
     let messageId = req.params.messageId.trim(); // ✅ Trim to remove spaces/newlines
     const { text } = req.body;
-
+ 
     // ✅ Ensure messageId is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(messageId)) {
       return res.status(400).json({ error: "Invalid message ID format" });
     }
-
+ 
     // ✅ Find the existing message first
     const existingMessage = await Messages.findById(messageId);
     if (!existingMessage) {
       return res.status(404).json({ error: "Message not found" });
     }
-
+ 
     console.log("Updating message:", messageId, "with text:", text); // Debugging log
-
+ 
     // ✅ Update only the `text` field inside `message` object
     const updatedMessage = await Messages.findByIdAndUpdate(
       messageId,
       { $set: { "message.text": text } }, // ✅ Properly update nested field
       { new: true, runValidators: true }
     );
-
+ 
     res.json(updatedMessage);
   } catch (err) {
     console.error("Error updating message:", err); // Log the error
     res.status(500).json({ error: "Failed to update message", details: err.message });
   }
 };
-
+ 
 // Delete a Message
 module.exports.deleteMessage = async (req, res) => {
   try {
     let messageId = req.params.messageId.trim(); // ✅ Trim messageId
-
+ 
     // ✅ Check if messageId is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(messageId)) {
       return res.status(400).json({ error: "Invalid message ID format" });
     }
-
+ 
     // ✅ Delete the message
     const deletedMessage = await Messages.findByIdAndDelete(messageId);
-
+ 
     if (!deletedMessage) {
       return res.status(404).json({ error: "Message not found" });
     }
-
+ 
     res.json({ message: "Message deleted successfully" });
   } catch (err) {
     console.error("Error deleting message:", err); // ✅ Log error for debugging
