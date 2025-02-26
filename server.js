@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const authRoutes = require("./routes/auths");
 const messageRoutes = require("./routes/messages");
 const notificationRoutes = require("./routes/notification");
+const { router: logoutRouter, authenticateToken } = require('./routes/logout');
 const socket = require("socket.io");
 require("dotenv").config();
 const http = require("http");
@@ -54,6 +55,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static('public'));
 
+
 // ✅ Initialize Socket.io
 const io = socket(server, {
   cors: {
@@ -74,6 +76,13 @@ mongoose
 app.use("/api/auths", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notification",notificationRoutes(io))
+app.use('/api/logout', logoutRouter);
+
+
+// Sample protected route
+app.get('/api/protected', authenticateToken, (req, res) => {
+  res.json({ message: "This is a protected route", user: req.user });
+});
 
  
 // Start the server
