@@ -16,7 +16,7 @@ const server = http.createServer(app);
 // ✅ Allow the correct frontend domain
 const allowedOrigins = [
   "https://chat-app-delta-lemon.vercel.app", // Your Vercel frontend
-  "http://localhost:3000", // Allow local development
+  "http://localhost:3000",
 ];
 
 // ✅ CORS Middleware (Allow PUT & DELETE)
@@ -54,6 +54,7 @@ app.use((req, res, next) => {
  
 app.use(express.json());
 app.use(express.static('public'));
+app.use("/uploads", express.static("uploads"));
 
 
 // ✅ Initialize Socket.io
@@ -128,6 +129,10 @@ io.on("connection", (socket) => {
     } else {
       console.log("Recipient is offline or not connected.");
     }
+  });
+
+  socket.on('send-voice-msg', ({ to, audioUrl }) => {
+    io.to(to).emit('receive-voice-msg', { audioUrl });
   });
 
   // Remove disconnected user

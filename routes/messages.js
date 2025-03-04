@@ -1,8 +1,9 @@
 const express = require("express");
 // const Message = require("../models/messagesModel"); 
 const mongoose = require("mongoose"); // ✅ Correct import
+const multer = require("multer");
 
-const { addMessage, getMessages,addCallMessage,getCallMessages,deleteMessage,updateMessage } = require("../controllers/messagesController");
+const { addMessage, getMessages,addCallMessage,getCallMessages,deleteMessage,updateMessage ,sendVoiceMessage, getVoiceMessages} = require("../controllers/messagesController");
 const router = express.Router();
  
 // Route to add a new message (including emojis)
@@ -16,34 +17,23 @@ router.delete("/:messageId", deleteMessage);
 router.post("/add-call", addCallMessage);
 router.post("/get-calls", getCallMessages);
 
-// router.put("/:messageId", async (req, res) => {
-//     try {
-//       let messageId = req.params.messageId.trim(); // ✅ Trim to remove spaces/newlines
-//       const { text } = req.body;
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/'); // Save files in "uploads" folder
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname); // Unique filename
+    }
+  });
+  const upload = multer({ storage: storage });
   
-//       // ✅ Ensure messageId is a valid MongoDB ObjectId
-//       if (!mongoose.Types.ObjectId.isValid(messageId)) {
-//         return res.status(400).json({ error: "Invalid message ID format" });
-//       }
   
-//       console.log("Updating message:", messageId, "with text:", text); // Debugging log
+  router.post('/addvoice', upload.single('file'), sendVoiceMessage);
   
-//       const updatedMessage = await Message.findByIdAndUpdate(
-//         messageId,
-//         { "message.text": text },
-//         { new: true, runValidators: true }
-//       );
+  // Get voice messages between two users
+  router.get('/:from/:to', getVoiceMessages);
   
-//       if (!updatedMessage) {
-//         return res.status(404).json({ error: "Message not found" });
-//       }
-  
-//       res.json(updatedMessage);
-//     } catch (err) {
-//       console.error("Error updating message:", err); // Log the error
-//       res.status(500).json({ error: "Failed to update message", details: err.message });
-//     }
-//   });
   
   
  
