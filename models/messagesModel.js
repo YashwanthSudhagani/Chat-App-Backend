@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
- 
+
 const messageSchema = new mongoose.Schema(
   {
     message: {
-      text: { type: String, required: true },
+      text: { type: String, default: null }, // Optional for audio messages
+      audio: { type: String, default: null }, // Store base64 encoded audio
     },
     users: Array,
     sender: {
@@ -14,6 +15,5 @@ const messageSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
- 
+
 module.exports = mongoose.model("Messages", messageSchema);
- 
