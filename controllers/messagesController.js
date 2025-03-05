@@ -255,7 +255,6 @@ module.exports.sendVoiceMessage = async (req, res) => {
   }
 };
 
-
 module.exports.getVoiceMessages = async (req, res) => {
   try {
     const { from, to } = req.params;

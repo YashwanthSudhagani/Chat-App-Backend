@@ -5,6 +5,8 @@ const authRoutes = require("./routes/auths");
 const messageRoutes = require("./routes/messages");
 const notificationRoutes = require("./routes/notification");
 const { router: logoutRouter, authenticateToken } = require('./routes/logout');
+const fs = require("fs");
+const path = require("path");
 const socket = require("socket.io");
 require("dotenv").config();
 const http = require("http");
@@ -51,10 +53,15 @@ app.use((req, res, next) => {
   next();
 });
  
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
  
 app.use(express.json());
 app.use(express.static('public'));
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(uploadsDir));
 
 
 // ✅ Initialize Socket.io

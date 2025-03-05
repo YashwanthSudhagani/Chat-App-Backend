@@ -1,6 +1,6 @@
 const express = require("express");
 // const Message = require("../models/messagesModel"); 
-const mongoose = require("mongoose"); // ✅ Correct import
+//const mongoose = require("mongoose"); // ✅ Correct import
 const multer = require("multer");
 
 const { addMessage, getMessages,addCallMessage,getCallMessages,deleteMessage,updateMessage ,sendVoiceMessage, getVoiceMessages} = require("../controllers/messagesController");
@@ -19,15 +19,15 @@ router.post("/get-calls", getCallMessages);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'uploads/'); // Save files in "uploads" folder
-    },
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname); // Unique filename
-    }
-  });
-  const upload = multer({ storage: storage });
-  
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Save files in "uploads" folder
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Unique filename
+  }
+});
+const upload = multer({ storage: storage });
+
   
   router.post('/addvoice', upload.single('file'), sendVoiceMessage);
   
