@@ -52,7 +52,10 @@ app.use((req, res, next) => {
 });
  
  
+// ✅ Ensure Express can handle JSON and URL-encoded form data
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // Allow CORS if frontend and backend are on different domains
 app.use(express.static('public'));
 app.use("/uploads", express.static("uploads"));
 
@@ -131,8 +134,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on('send-voice-msg', ({ to, audioUrl }) => {
-    io.to(to).emit('receive-voice-msg', { audioUrl });
+  socket.on('send-voice-msg', ({ to, audioUrl, from }) => {
+    console.log(`Voice message from ${from} to ${to}:`, audioUrl);
+    io.to(to).emit('receive-voice-msg', { audioUrl, from }); // Include `from`
   });
 
   // Remove disconnected user

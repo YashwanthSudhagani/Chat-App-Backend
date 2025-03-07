@@ -1,7 +1,7 @@
 const Messages = require("../models/messagesModel");
 const mongoose = require("mongoose");
 const VoiceMessage = require('../models/VoiceMessage');
- 
+const multer = require("multer"); 
  
 const callUser = (req, res) => {
   const { from, to, type } = req.body;
@@ -228,17 +228,59 @@ module.exports.deleteMessage = async (req, res) => {
   }
 };
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Save files in "uploads" folder
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname); // Unique filename
+  },
+});
+const upload = multer({ storage: storage });
 
-// Handle voice message upload
-module.exports.sendVoiceMessage = async (req, res) => {
-  try {
-    const { from, to } = req.body;
-
-    if (!req.file) {
-      return res.status(400).json({ msg: 'Audio file is required' });
+module.exports.extractFormData = (req, res, next) => {
+  upload.single("file")(req, res, function (err) {
+    if (err) {
+      return res.status(500).json({ error: "Multer error", details: err });
     }
 
-    const audioUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    try {
+      console.log("✅ Received FormData Fields:", req.body);
+
+      // Trim IDs to remove spaces
+      req.body.from = req.body.from.trim();
+      req.body.to = req.body.to.trim();
+
+      next();
+    } catch (error) {
+      console.error("❌ Error processing FormData:", error);
+      return res.status(400).json({ error: "Invalid form data" });
+    }
+  });
+};
+module.exports.sendVoiceMessage = async (req, res) => {
+  try {
+    console.log("✅ Received FormData Fields:", req.body);
+    console.log("✅ Received file:", req.file);
+
+    let { from, to } = req.body;
+
+    // Ensure `from` and `to` are valid ObjectIds
+    if (!mongoose.Types.ObjectId.isValid(from) || !mongoose.Types.ObjectId.isValid(to)) {
+      console.error("❌ Invalid sender or receiver ID");
+      return res.status(400).json({ msg: "Invalid sender or receiver ID" });
+    }
+
+    // Convert to MongoDB ObjectId
+    from = new mongoose.Types.ObjectId(from);
+    to = new mongoose.Types.ObjectId(to);
+
+    if (!req.file) {
+      console.error("❌ No audio file received");
+      return res.status(400).json({ msg: "Audio file is required" });
+    }
+
+    const audioUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
 
     const newVoiceMessage = new VoiceMessage({
       sender: from,
@@ -246,18 +288,23 @@ module.exports.sendVoiceMessage = async (req, res) => {
       audioUrl,
     });
 
-    await newVoiceMessage.save(); 
+    await newVoiceMessage.save();
 
+    console.log("✅ Voice message saved successfully:", audioUrl);
     res.status(201).json({ audioUrl });
   } catch (error) {
-    console.error('Error saving voice message:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("❌ Error saving voice message:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 module.exports.getVoiceMessages = async (req, res) => {
   try {
     const { from, to } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(from) || !mongoose.Types.ObjectId.isValid(to)) {
+      return res.status(400).json({ msg: "Invalid sender or receiver ID" });
+    }
 
     const messages = await VoiceMessage.find({
       $or: [
@@ -266,12 +313,32 @@ module.exports.getVoiceMessages = async (req, res) => {
       ],
     })
       .sort({ createdAt: 1 })
-      .populate("sender", "username") // ✅ Populate sender's username
-      .populate("receiver", "username"); // ✅ Populate receiver's username
+      .populate("sender", "username")
+      .populate("receiver", "username");
 
     res.status(200).json(messages);
   } catch (error) {
-    console.error("Error fetching voice messages:", error);
+    console.error("❌ Error fetching voice messages:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+// Delete voice message
+module.exports.deleteVoiceMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const message = await VoiceMessage.findById(id);
+
+    if (!message) {
+      return res.status(404).json({ message: "Voice message not found" });
+    }
+
+    // Delete from database
+    await VoiceMessage.findByIdAndDelete(id);
+
+    res.json({ success: true, message: "Voice message deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
