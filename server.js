@@ -15,6 +15,7 @@ const server = http.createServer(app);
 
 // ✅ Allow the correct frontend domain
 const allowedOrigins = [
+  "https://chat-app-front-end-idnz.vercel.app",
   "https://chat-app-delta-lemon.vercel.app", // Your Vercel frontend
   "http://localhost:3000",
 ];
