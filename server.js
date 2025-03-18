@@ -5,18 +5,23 @@ const authRoutes = require("./routes/auths");
 const messageRoutes = require("./routes/messages");
 const notificationRoutes = require("./routes/notification");
 const { router: logoutRouter, authenticateToken } = require('./routes/logout');
+const { ExpressPeerServer } = require("peer");
 const socket = require("socket.io");
 require("dotenv").config();
 const http = require("http");
  
 const app = express();
 const server = http.createServer(app);
-
+const PORT = 5000; // Match with frontend
+// ✅ Initialize PeerJS Server
+const peerServer = ExpressPeerServer(server, {
+  path: "/peerjs",
+  debug: true,
+});
 
 // ✅ Allow the correct frontend domain
 const allowedOrigins = [
   "https://chat-app-front-end-idnz.vercel.app",
-  "https://chat-app-delta-lemon.vercel.app", // Your Vercel frontend
   "http://localhost:3000",
 ];
 
@@ -59,6 +64,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors()); // Allow CORS if frontend and backend are on different domains
 app.use(express.static('public'));
 app.use("/uploads", express.static("uploads"));
+app.use("/peerjs", peerServer); // ✅ Correct path
 
 
 // ✅ Initialize Socket.io
@@ -98,6 +104,7 @@ server.listen(process.env.PORT, () => {
 global.onlineUsers = new Map();
 
 const users = {}; // Store active users
+const activeCalls = {}; // Store active calls
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -139,6 +146,47 @@ io.on("connection", (socket) => {
     console.log(`Voice message from ${from} to ${to}:`, audioUrl);
     io.to(to).emit('receive-voice-msg', { audioUrl, from }); // Include `from`
   });
+
+  
+  socket.on("start-call", ({ callerId, receiverId, peerId }) => {
+    console.log(`📞 Call initiated from ${callerId} to ${receiverId}`);
+    activeCalls[receiverId] = callerId;
+    io.to(receiverId).emit("incoming-call", { callerId, peerId });
+  });
+
+  socket.on("accept-call", ({ callerId, receiverId, peerId }) => {
+    console.log(`✅ Call accepted by ${receiverId}`);
+    io.to(callerId).emit("call-accepted", { peerId });
+  });
+
+  socket.on("decline-call", ({ callerId, receiverId }) => {
+    console.log(`❌ Call declined by ${receiverId}`);
+    delete activeCalls[receiverId];
+    io.to(callerId).emit("call-declined");
+  });
+
+  socket.on("end-call", ({ callerId, receiverId }) => {
+    console.log(`📴 Call ended between ${callerId} and ${receiverId}`);
+    delete activeCalls[receiverId];
+    io.to(receiverId).emit("call-ended");
+    io.to(callerId).emit("call-ended");
+  });
+
+  socket.on("toggle-mute", ({ userId, isMuted }) => {
+    console.log(`🔇 User ${userId} ${isMuted ? "muted" : "unmuted"}`);
+    io.to(userId).emit("toggle-mute", { isMuted });
+  });
+
+  socket.on("hold-call", ({ userId, isOnHold }) => {
+    console.log(`⏸️ User ${userId} ${isOnHold ? "on hold" : "resumed"}`);
+    io.to(userId).emit("hold-call", { isOnHold });
+  });
+
+  socket.on("add-user-to-call", ({ roomId, newUserId }) => {
+    console.log(`➕ Adding ${newUserId} to call in room ${roomId}`);
+    io.to(roomId).emit("user-added", { newUserId });
+  });
+
 
   // Remove disconnected user
   socket.on("disconnect", () => {
