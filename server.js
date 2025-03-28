@@ -15,6 +15,7 @@ require("dotenv").config();
 const http = require("http");
 const pollRoutes = require("./routes/Poll");
 const Poll = require("./models/Poll");
+const groupRoutes = require("./routes/groupRoutes")
  
 const app = express();
 const server = http.createServer(app);
@@ -71,7 +72,7 @@ app.use(cors()); // Allow CORS if frontend and backend are on different domains
 app.use(express.static('public'));
 app.use("/uploads", express.static("uploads"));
 app.use("/peerjs", peerServer); // ✅ Correct path
-
+app.use("/api/groups", groupRoutes)
 
 
 // ✅ Initialize Socket.io

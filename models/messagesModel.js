@@ -12,6 +12,10 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    isGroupMessage: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

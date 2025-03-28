@@ -342,3 +342,80 @@ module.exports.deleteVoiceMessage = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+module.exports.addMessage = async (req, res, next) => {
+  try {
+    const { from, to, message } = req.body
+
+    // Check if this is a group message
+    const Group = require("../models/groupModel")
+    const isGroup = await Group.findById(to)
+
+    if (isGroup) {
+      // For group messages, create a message for each member
+      const newMessage = await Messages.create({
+        message: { text: message },
+        users: [from, to],
+        sender: from,
+        isGroupMessage: true,
+      })
+
+      // Emit socket event for group message (handled in your socket.js file)
+      // This is just a placeholder - you'll need to implement the actual socket logic
+
+      return res.json(newMessage)
+    } else {
+      // Regular one-to-one message (your existing code)
+      const data = await Messages.create({
+        message: { text: message },
+        users: [from, to],
+        sender: from,
+      })
+
+      if (data) return res.json({ msg: "Message added successfully." })
+      return res.json({ msg: "Failed to add message to the database" })
+    }
+  } catch (ex) {
+    next(ex)
+  }
+}
+
+module.exports.getMessages = async (req, res, next) => {
+  try {
+    const { from, to } = req.body
+
+    // Check if this is a group chat
+    const Group = require("../models/groupModel")
+    const isGroup = await Group.findById(to)
+
+    let messages
+
+    if (isGroup) {
+      // For group messages, get all messages where the 'to' field matches the group ID
+      messages = await Messages.find({
+        users: { $all: [from, to] },
+      }).sort({ updatedAt: 1 })
+    } else {
+      // Regular one-to-one messages (your existing code)
+      messages = await Messages.find({
+        users: {
+          $all: [from, to],
+        },
+      }).sort({ updatedAt: 1 })
+    }
+
+    const projectedMessages = messages.map((msg) => {
+      return {
+        fromSelf: msg.sender.toString() === from,
+        message: msg.message.text,
+        _id: msg._id,
+        timestamp: msg.createdAt,
+      }
+    })
+
+    res.json(projectedMessages)
+  } catch (ex) {
+    next(ex)
+  }
+}
