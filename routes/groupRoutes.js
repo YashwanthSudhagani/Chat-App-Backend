@@ -13,10 +13,14 @@ router.get("/:groupId", groupController.getGroupById)
 // Add a member to a group
 router.post("/add-member", groupController.addMember)
 
+// Add multiple members to a group
+router.post("/addMembers", groupController.addMembers)
+
 // Remove a member from a group
 router.post("/remove-member", groupController.removeMember)
 
-
+// Delete a group
+router.post("/delete", groupController.deleteGroup)
 
 module.exports = router
 
